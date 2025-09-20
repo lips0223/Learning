@@ -1,0 +1,54 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.container {
+  display: flex;
+}
+
+.card {
+  padding: 2em;
+}
+
+.highlight {
+  color: #820202;
+}
+
+/* src/components/Approve.css */
+.button {
+  background-color: #4caf50; /* 绿色背景 */
+  color: white; /* 白色文字 */
+  padding: 10px 20px; /* 内边距 */
+  border: none; /* 无边框 */
+  border-radius: 5px; /* 圆角 */
+  cursor: pointer; /* 鼠标指针样式 */
+  font-size: 16px; /* 字体大小 */
+}
+
+.button:hover {
+  background-color: #45a049; /* 悬停时的背景色 */
+}
+
+.button.disabled {
+  background-color: gray; /* 灰色背景 */
+  color: white; /* 白色文字 */
+  cursor: not-allowed; /* 禁用状态的光标 */
+}

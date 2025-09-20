@@ -1,0 +1,61 @@
+执行编译特定文件   npx hardhat compile contracts/LipsNft.sol
+基本编译命令：    npx hardhat compile
+清理缓存后重新编译： npx hardhat clean && npx hardhat compile
+强制重新编译所有文件：npx hardhat compile --force
+查看编译详情：npx hardhat compile --verbose
+
+
+部署seoplia合约：
+npm run deploy
+npx hardhat run scripts/deploy-sepolia.js --network sepolia
+
+
+验证合约 
+npx hardhat verify --network sepolia 0x0CA37c4cFAf4022c4ba89E273AcE04fCac670dE0
+但可能会有问题 因为
+Etherscan:
+Invalid API Key (#err2)|SEPOLIA-
+
+所以需要在https://sepolia.etherscan.io/address/0x46445f4F923ea490B2fc9F3804ccA178292B6f28 这个区块链浏览器中手动上传校验
+以这个简单NFT为例 分为两步
+第一步：
+ 需要扁平化LipsNft.sol文件 因为我们使用了openzeppelin中的ERC721 合约 
+  //引入openzeppelin的ERC721合约 用于实现NFT标准
+  import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+  // 引入ERC721Enumerable 用于实现可枚举的NFT
+  import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+  //引入Ownable 用于权限管理
+  import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+浏览器是识别不了这些导入后的代码所以在verify时识别不了会报错
+所以需要使用hardhat的指令 
+npx hardhat flatten contracts/LipsNft.sol > flattened/LipsNft_for_etherscan.sol
+这是一种将智能合约及其所有依赖项合并到单个文件中的技术。这对于在 Etherscan 等区块链浏览器上验证合约非常重要，因为验证过程需要完整的源代码，包括所有导入的依赖。
+第二步：
+在扁平化合约之后 可以重新部署一遍
+## 合约验证过程
+
+在 Etherscan 上验证合约需要以下步骤：
+
+1. 准备用于验证的合约源码 `LipsNft_for_etherscan.sol`
+2. 将源码中的编译器版本从 `0.8.24` 修改为 `0.8.30`（与 Etherscan 上的编译器版本匹配）
+3. 访问 [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x46445f4F923ea490B2fc9F3804ccA178292B6f28#code) 合约页面
+4. 点击 "Verify and Publish" 按钮
+5. 选择验证方式为 "Solidity (Single file)"
+6. 填写验证表单：
+   - 编译器版本: v0.8.30+commit.73712a01
+   - 开源协议: MIT License
+   - 优化: Yes (200 runs)
+   - 粘贴修改后的合约源码
+7. 提交验证请求
+
+部署完成之后 我们就可以通过NFT生成器下载一些NFT的资源 放入art_engine目录中的layer下
+然后修改一些配置进行NFT的铸造 
+铸造完成后会构建出build目录 其中包含image和json两个目录 
+通过pinata网站把image目录上传后拿到CID 
+CID在通过配置IPFS进行更新
+然后把JSON再次上传到pinata中拿到CID 用来设置合约的baseURI（区块链浏览器）
+设置好之后 我们在区块链浏览器中调用safeMint合约 来铸造NFT
+此时就能看到铸造后的NFT
+通过合约的tokenURI 可以查询NFT
+
+

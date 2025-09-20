@@ -1,0 +1,13 @@
+{
+  "contractName": "LipsNft",
+  "contractAddress": "0x0CA37c4cFAf4022c4ba89E273AcE04fCac670dE0",
+  "deployer": "0xa98C3E7B36d38Ce4f0c15d064a42a4846c979479",
+  "deploymentTime": "2025-09-20T16:27:38.787Z",
+  "network": "sepolia",
+  "chainId": "11155111",
+  "transactionHash": "0xfedbbd786226a7b5aa69898c6255877c9e90aa1cd2f3e5cd3ee04fff9b1e8cc5",
+  "etherscanUrl": "https://sepolia.etherscan.io/address/0x0CA37c4cFAf4022c4ba89E273AcE04fCac670dE0",
+  "estimatedGas": "53793",
+  "gasPrice": "1012061",
+  "deploymentCost": "54441797373"
+}

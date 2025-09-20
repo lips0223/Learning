@@ -1,0 +1,6 @@
+[tool.wake.build]
+[tool.wake.build.compiler]
+solc_allow_paths = ["node_modules"]
+
+[tool.wake.build.compiler.solc_remaps]
+"@openzeppelin/contracts/" = "node_modules/@openzeppelin/contracts/"

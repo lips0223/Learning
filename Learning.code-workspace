@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": "./FirstDay/ERC721"
+    }
+  ],
+  "settings": {
+    "solidity.compileUsingRemoteVersion": "v0.8.24+commit.e11b9ed9",
+    "solidity.packageDefaultDependenciesContractsDirectory": "FirstDay/ERC721/contracts",
+    "solidity.packageDefaultDependenciesDirectory": "FirstDay/ERC721/node_modules",
+    "solidity.remappings": [
+      "@openzeppelin/contracts/=FirstDay/ERC721/node_modules/@openzeppelin/contracts/"
+    ]
+  }
+}

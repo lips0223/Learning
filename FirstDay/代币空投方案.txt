@@ -1,0 +1,12 @@
+空投平台
+https://airdropalert.com/
+
+https://freeairdrop.io/
+
+第一种方案 批量转账 最便捷 但是成本需项目方控制
+批量转账工具对比：https://learnblockchain.cn/article/8828 链上转账工具
+
+第二种方案 默克尔树 发放 通过proof形式进行验证 缺点就是不能重复领取空投
+
+
+第三种方案 数字签名方案 链下生成签名 链上验证签名

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { formatEther, parseUnits } from 'viem';
 import { useWalletInfo } from '../store/wallet';
 import { CONTRACTS, API_CONFIG } from '../lib/contracts';
 import { createPublicClient, http } from 'viem';
@@ -37,6 +37,8 @@ export function TokenAirdropComponent() {
   const [loading, setLoading] = useState(false);
   const [signatureData, setSignatureData] = useState<SignatureData | null>(null);
   const [step, setStep] = useState<'input' | 'signed' | 'claiming' | 'success'>('input');
+  const [pollingCount, setPollingCount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { writeContract, data: hash, error: writeError } = useWriteContract();
   
@@ -62,6 +64,7 @@ export function TokenAirdropComponent() {
         return true;
       } else if (receipt.status === 'reverted') {
         alert('交易已确认但执行失败，请检查交易详情');
+        setStep('input');
         return false;
       }
     } catch (error) {
@@ -71,19 +74,105 @@ export function TokenAirdropComponent() {
     }
   };
 
+  // 轮询检查交易状态
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    if (step === 'claiming' && hash) {
+      let pollCount = 0;
+      const maxPolls = 60; // 最多轮询60次 (5分钟)
+      
+      intervalId = setInterval(async () => {
+        pollCount++;
+        setPollingCount(pollCount);
+        
+        try {
+          const receipt = await publicClient.getTransactionReceipt({
+            hash: hash as `0x${string}`
+          });
+          
+          if (receipt.status === 'success') {
+            setStep('success');
+            if (intervalId) clearInterval(intervalId);
+          } else if (receipt.status === 'reverted') {
+            alert('交易失败，请重试');
+            setStep('input');
+            if (intervalId) clearInterval(intervalId);
+          }
+        } catch {
+          // 交易还在pending，继续轮询
+          console.log(`轮询 ${pollCount}/${maxPolls}: 交易还在处理中...`);
+        }
+        
+        // 达到最大轮询次数后停止
+        if (pollCount >= maxPolls) {
+          console.log('轮询超时，但交易可能仍在处理中');
+          if (intervalId) clearInterval(intervalId);
+        }
+      }, 5000); // 每5秒检查一次
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [step, hash, publicClient]);
+
+  // 监听交易错误（包括用户取消）
+  useEffect(() => {
+    if (writeError && step === 'claiming') {
+      console.error('交易错误:', writeError);
+      let errorMsg = '交易失败';
+      
+      const errorMessage = writeError.message || '';
+      
+      if (errorMessage.includes('User rejected') || 
+          errorMessage.includes('user denied') || 
+          errorMessage.includes('User denied') ||
+          errorMessage.includes('user rejected') ||
+          errorMessage.includes('rejected')) {
+        errorMsg = '用户取消了交易';
+        setStep('signed'); // 恢复到签名状态
+      } else if (errorMessage.includes('insufficient funds')) {
+        errorMsg = '账户 ETH 余额不足，无法支付 gas 费';
+        setStep('signed');
+      } else if (errorMessage.includes('nonce')) {
+        errorMsg = '此代币已被领取过或 nonce 无效';
+        setStep('input'); // 回到输入状态
+      } else if (errorMessage.includes('expired')) {
+        errorMsg = '签名已过期，请重新生成';
+        setStep('input');
+      } else if (errorMessage) {
+        errorMsg = '交易失败: ' + errorMessage;
+        setStep('signed');
+      }
+      
+      setErrorMessage(errorMsg);
+      // 对于用户取消，不显示为错误状态，直接恢复
+      if (!errorMessage.includes('rejected') && !errorMessage.includes('denied')) {
+        // 只有非用户取消的错误才显示错误页面
+        setTimeout(() => {
+          alert(errorMsg);
+        }, 100);
+      }
+    }
+  }, [writeError, step]);
+
+  // 监听wagmi的交易状态变化（作为备用）
+  useEffect(() => {
+    if (isConfirmed && step === 'claiming') {
+      setStep('success');
+    }
+  }, [isConfirmed, step]);
+
   // 生成签名
   const generateSignature = async () => {
     if (!address || !selectedToken || !amount) return;
 
     setLoading(true);
     try {
-      // 计算以代币小数位数表示的金额
+      // 使用正确的小数位数计算金额
       const decimals = selectedToken.decimals;
-      const amountInWei = parseEther(amount);
-      // 对于非18位小数的代币，需要调整
-      const adjustedAmount = decimals === 18 
-        ? amountInWei 
-        : BigInt(amount) * BigInt(10 ** decimals);
+      const adjustedAmount = parseUnits(amount, decimals);
 
       // 计算过期时间（当前时间 + 5分钟）
       const expireAt = Math.floor(Date.now() / 1000) + 300;
@@ -141,10 +230,27 @@ export function TokenAirdropComponent() {
           BigInt(signatureData.expireAt || 0),
           signatureData.signature as `0x${string}`,
         ],
+        gas: BigInt(300000), // 设置 gas limit
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('领取代币失败:', error);
-      alert('领取代币失败: ' + (error as Error).message);
+      let errorMsg = '领取代币失败';
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('insufficient funds')) {
+        errorMsg = '账户 ETH 余额不足，无法支付 gas 费';
+      } else if (errorMessage.includes('user rejected')) {
+        errorMsg = '用户取消了交易';
+      } else if (errorMessage.includes('nonce')) {
+        errorMsg = '此代币已被领取过';
+      } else if (errorMessage.includes('expired')) {
+        errorMsg = '签名已过期，请重新生成';
+      } else if (errorMessage) {
+        errorMsg = errorMessage;
+      }
+      
+      alert(errorMsg);
       setStep('signed');
     }
   };
@@ -154,14 +260,9 @@ export function TokenAirdropComponent() {
     setStep('input');
     setSignatureData(null);
     setAmount('');
+    setErrorMessage('');
+    setPollingCount(0);
   };
-
-  // 监听交易确认
-  useEffect(() => {
-    if (isConfirmed && step === 'claiming') {
-      setStep('success');
-    }
-  }, [isConfirmed, step]);
 
   if (!isConnected || !isCorrectNetwork) {
     return (
@@ -266,29 +367,34 @@ export function TokenAirdropComponent() {
       {step === 'claiming' && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">
             {isConfirming ? '等待交易确认...' : '正在提交交易...'}
           </p>
+          {pollingCount > 0 && (
+            <p className="text-sm text-blue-600 dark:text-blue-400 mb-4">
+              自动检查进度: {pollingCount}/60 (每5秒检查一次)
+            </p>
+          )}
           {hash && (
             <div className="space-y-3">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 交易哈希: {hash.slice(0, 10)}...{hash.slice(-8)}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                如果等待时间过长，可以手动检查交易状态：
+                系统正在自动检查交易状态，无需手动操作
               </p>
               <div className="flex space-x-3 justify-center">
                 <button
                   onClick={() => checkTransactionStatus(hash)}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
                 >
-                  🔍 检查交易状态
+                  🔍 立即检查
                 </button>
                 <button
                   onClick={() => setStep('success')}
                   className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
                 >
-                  ✅ 交易已成功
+                  ✅ 手动确认成功
                 </button>
               </div>
             </div>
@@ -318,11 +424,17 @@ export function TokenAirdropComponent() {
         </div>
       )}
 
-      {writeError && (
-        <div className="mt-4 bg-red-50 dark:bg-red-900/20 rounded-md p-4">
-          <p className="text-sm text-red-800 dark:text-red-300">
-            错误: {writeError.message}
+      {errorMessage && step === 'signed' && (
+        <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-md p-4">
+          <p className="text-sm text-yellow-800 dark:text-yellow-300">
+            {errorMessage}
           </p>
+          <button 
+            onClick={() => setErrorMessage('')}
+            className="mt-2 text-xs text-yellow-600 dark:text-yellow-400 hover:underline"
+          >
+            关闭提示
+          </button>
         </div>
       )}
     </div>

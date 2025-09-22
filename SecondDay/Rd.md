@@ -4,8 +4,11 @@ contracts 是Foundry集成的合约
 --forge install OpenZeppelin/openzeppelin-contracts
 
 
-Mock WBTC: 0x149b543C30514612449c815e166Ec78f21AF32C2
-Mock WETH: 0xEcBDD117454C49B42ca2ee67b49C42279E022490  
-Mock LINK: 0x111804f4c285dC5bB4FAc924DA9fD8c721400d15
-Mock USDC: 0xb201F40cC23518Ad433930bD4aA6f1262f2a09D5
-Mock USDT: 0x54350eE868530B4F5826866b25E140a336f1d940
+- New Mock WBTC: https://sepolia.etherscan.io/address/0x550a3fc779b68919b378c1925538af7065a2a761
+- New Mock WETH: https://sepolia.etherscan.io/address/0x237b68901458be70498b923a943de7f885c89943
+- New Mock LINK: https://sepolia.etherscan.io/address/0x1847d3dba09a81e74b31c1d4c9d3220452ab3973
+- New Mock USDC: https://sepolia.etherscan.io/address/0x279b091df8fd4a07a01231dcfea971d2abcae0f8
+- New Mock USDT: https://sepolia.etherscan.io/address/0xda988ddbbb4797affe6efb1b267b7d4b29b604eb
+
+**NEW TokenAirDrop需要验证:**
+- NEW TokenAirDrop: https://sepolia.etherscan.io/address/0x53850d0eb69feB0F2616e2A89AC9eFBE4A441569

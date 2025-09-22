@@ -39,6 +39,26 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
+// 调试端点 - 检查环境变量状态（不暴露具体内容）
+app.get('/api/debug/env-status', (req, res) => {
+  try {
+    const envStatus = {
+      hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+      hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      hasSignerPrivateKey: !!process.env.SIGNER_PRIVATE_KEY,
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'NOT_SET',
+      firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'NOT_SET',
+      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+      privateKeyStartsWith: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) || 'NOT_SET',
+      timestamp: new Date().toISOString()
+    };
+    res.json(envStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 404 处理
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

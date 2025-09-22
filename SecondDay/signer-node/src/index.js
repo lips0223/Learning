@@ -43,15 +43,17 @@ app.get('/api/test', (req, res) => {
 app.get('/api/test-env', (req, res) => {
   res.json({
     timestamp: new Date().toISOString(),
-    env_check: {
-      hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
-      hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-      hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
-      privateKeyFirst30: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) || 'NOT_FOUND'
-    }
+    env_values: {
+      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || 'NOT_SET',
+      FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || 'NOT_SET',
+      FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || 'NOT_SET',
+      SIGNER_PRIVATE_KEY: process.env.SIGNER_PRIVATE_KEY || 'NOT_SET',
+      TOKEN_AIRDROP_ADDRESS: process.env.TOKEN_AIRDROP_ADDRESS || 'NOT_SET',
+      SEPOLIA_RPC_URL: process.env.SEPOLIA_RPC_URL || 'NOT_SET',
+      NODE_ENV: process.env.NODE_ENV || 'NOT_SET',
+      VERCEL_ENV: process.env.VERCEL_ENV || 'NOT_SET'
+    },
+    all_env_keys: Object.keys(process.env).sort()
   });
 });
 

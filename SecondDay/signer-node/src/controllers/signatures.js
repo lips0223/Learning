@@ -4,13 +4,13 @@ const firebaseService = require('../services/firebase');
 // 生成空投签名
 const generateSignature = async (req, res) => {
   try {
-    const { userAddress, tokenAddress, amount } = req.body;
+    const { userAddress, tokenAddress, amount, expireAt } = req.body;
 
     // 参数验证
-    if (!userAddress || !tokenAddress || !amount) {
+    if (!userAddress || !tokenAddress || !amount || !expireAt) {
       return res.status(400).json({ 
         error: 'Missing required parameters',
-        required: ['userAddress', 'tokenAddress', 'amount']
+        required: ['userAddress', 'tokenAddress', 'amount', 'expireAt']
       });
     }
 
@@ -22,7 +22,8 @@ const generateSignature = async (req, res) => {
       userAddress,
       tokenAddress,
       amount,
-      nonce
+      nonce,
+      expireAt
     );
 
     // 保存签名到数据库
@@ -31,6 +32,7 @@ const generateSignature = async (req, res) => {
       tokenAddress,
       amount: amount.toString(),
       nonce: nonce.toString(),
+      expireAt: expireAt.toString(),
       signature: signatureData.signature,
       messageHash: signatureData.messageHash,
       signer: signatureData.signer,
@@ -47,6 +49,7 @@ const generateSignature = async (req, res) => {
         tokenAddress,
         amount: amount.toString(),
         nonce: nonce.toString(),
+        expireAt: expireAt.toString(),
         id: savedSignature.id
       }
     });

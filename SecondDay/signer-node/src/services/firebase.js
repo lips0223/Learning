@@ -17,15 +17,25 @@ class FirebaseService {
         console.log('🔍 Raw private key first 50 chars:', privateKey.substring(0, 50));
         console.log('🔍 Contains literal \\n:', privateKey.includes('\\n'));
         
-        // 只在包含字面量 \n 时才进行替换
+        // 处理 Vercel 可能添加的外层引号
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+          privateKey = privateKey.slice(1, -1);
+          console.log('✅ Removed outer quotes from private key');
+        }
+        
+        // 处理转义的换行符
         if (privateKey.includes('\\n')) {
           privateKey = privateKey.replace(/\\n/g, '\n');
           console.log('✅ Converted literal \\n to newlines');
-        } else {
-          console.log('✅ Private key already has proper formatting');
         }
         
-        console.log('� Final private key length:', privateKey.length);
+        // 处理可能的双重转义
+        if (privateKey.includes('\\"')) {
+          privateKey = privateKey.replace(/\\"/g, '"');
+          console.log('✅ Converted escaped quotes');
+        }
+        
+        console.log('🔍 Final private key length:', privateKey.length);
         console.log('🔍 Starts with BEGIN:', privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
         console.log('🔍 Ends with END:', privateKey.endsWith('-----END PRIVATE KEY-----'));
       } else {

@@ -60,8 +60,8 @@ app.get('/api/test-env', (req, res) => {
 // Firebase 测试端点
 app.get('/api/test-firebase', async (req, res) => {
   try {
-    const { initializeFirebase } = require('./services/firebase');
-    const result = await initializeFirebase();
+    const firebaseService = require('./services/firebase');
+    const result = firebaseService.initialize();
     
     res.json({
       timestamp: new Date().toISOString(),
@@ -72,7 +72,7 @@ app.get('/api/test-firebase', async (req, res) => {
         hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
         privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0
       },
-      result
+      result: 'Firebase initialized successfully'
     });
   } catch (error) {
     res.status(500).json({

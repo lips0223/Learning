@@ -48,7 +48,7 @@ app.get('/api/test', (req, res) => {
   console.log('===================================');
   
   res.json({ 
-    message: 'Server is running - Debug version with env vars',
+    message: 'Server is running - Debug version with env vars - v2',
     timestamp: new Date().toISOString(),
     env: {
       hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,

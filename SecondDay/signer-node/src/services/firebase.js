@@ -13,12 +13,32 @@ class FirebaseService {
       // 处理 Firebase 私钥
       let privateKey = process.env.FIREBASE_PRIVATE_KEY;
       if (privateKey) {
-        // 处理环境变量中的 \n 转义字符
-        privateKey = privateKey.replace(/\\n/g, '\n');
-        console.log('🔑 Private key loaded and formatted');
-        console.log('🔍 Private key starts with:', privateKey.substring(0, 50));
-        console.log('🔍 Private key ends with:', privateKey.substring(privateKey.length - 50));
-        console.log('🔍 Private key length:', privateKey.length);
+        // 调试：原始私钥信息
+        console.log('🔍 Raw private key length:', privateKey.length);
+        console.log('🔍 Raw private key first 100 chars:', privateKey.substring(0, 100));
+        console.log('🔍 Contains \\n sequences:', privateKey.includes('\\n'));
+        console.log('🔍 Contains actual newlines:', privateKey.includes('\n'));
+        
+        // 处理环境变量中的 \n 转义字符（如果存在）
+        if (privateKey.includes('\\n')) {
+          privateKey = privateKey.replace(/\\n/g, '\n');
+          console.log('✅ Converted \\n to actual newlines');
+        } else {
+          console.log('✅ Private key already contains actual newlines');
+        }
+        
+        // 确保私钥格式正确
+        if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+          console.log('❌ Private key does not start with BEGIN marker');
+        }
+        if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+          console.log('❌ Private key does not end with END marker');
+        }
+        
+        console.log('🔑 Final private key loaded and formatted');
+        console.log('🔍 Final private key starts with:', privateKey.substring(0, 50));
+        console.log('🔍 Final private key ends with:', privateKey.substring(privateKey.length - 50));
+        console.log('🔍 Final private key length:', privateKey.length);
       } else {
         console.log('❌ FIREBASE_PRIVATE_KEY not found in environment variables');
       }

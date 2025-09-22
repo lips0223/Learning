@@ -96,11 +96,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`🚀 Signer Service running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔥 Firebase Project: ${process.env.FIREBASE_PROJECT_ID}`);
-});
+// 启动服务器 (仅在非 Vercel 环境中)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Signer Service running on port ${PORT}`);
+    console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔥 Firebase Project: ${process.env.FIREBASE_PROJECT_ID}`);
+  });
+}
 
 module.exports = app;

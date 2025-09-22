@@ -39,24 +39,6 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
-// Firebase 测试端点
-app.get('/api/test-firebase', (req, res) => {
-  try {
-    const firebaseService = require('./services/firebase');
-    firebaseService.initialize();
-    res.json({ 
-      message: 'Firebase initialized successfully!',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Firebase initialization failed',
-      details: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
 // 环境变量测试端点
 app.get('/api/test-env', (req, res) => {
   res.json({

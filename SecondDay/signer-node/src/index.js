@@ -9,7 +9,15 @@ const PORT = process.env.PORT || 3000;
 
 // 中间件配置
 app.use(helmet()); // 安全头
-app.use(cors()); // 跨域
+
+// CORS 配置 - 允许所有来源访问
+app.use(cors({
+  origin: '*', // 允许所有来源
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false // 由于允许所有来源，不能使用credentials
+}));
+
 app.use(morgan('combined')); // 日志
 app.use(express.json({ limit: '10mb' })); // JSON 解析
 app.use(express.urlencoded({ extended: true }));

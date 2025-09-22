@@ -2,5 +2,22 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "functions": {
+    "app/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SEPOLIA_RPC_URL": "@next_public_sepolia_rpc_url",
+    "NEXT_PUBLIC_CHAIN_ID": "@next_public_chain_id",
+    "NEXT_PUBLIC_TOKEN_AIRDROP_CONTRACT": "@next_public_token_airdrop_contract",
+    "NEXT_PUBLIC_WBTC_CONTRACT": "@next_public_wbtc_contract",
+    "NEXT_PUBLIC_USDC_CONTRACT": "@next_public_usdc_contract",
+    "NEXT_PUBLIC_USDT_CONTRACT": "@next_public_usdt_contract",
+    "NEXT_PUBLIC_LINK_CONTRACT": "@next_public_link_contract",
+    "NEXT_PUBLIC_UNI_CONTRACT": "@next_public_uni_contract",
+    "NEXT_PUBLIC_API_BASE_URL": "@next_public_api_base_url",
+    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "@next_public_wallet_connect_project_id"
+  }
 }

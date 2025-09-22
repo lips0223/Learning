@@ -36,7 +36,19 @@ app.use('/api/signatures', require('./routes/signatures'));
 
 // 临时 API 端点用于测试
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
+  const envCheck = {
+    message: 'API is working!',
+    timestamp: new Date().toISOString(),
+    env: {
+      hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+      hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'NOT_SET',
+      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+      privateKeyStartsWith: process.env.FIREBASE_PRIVATE_KEY?.startsWith('-----BEGIN') || false
+    }
+  };
+  res.json(envCheck);
 });
 
 // 调试端点 - 检查环境变量状态（不暴露具体内容）

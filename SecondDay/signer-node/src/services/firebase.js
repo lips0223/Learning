@@ -10,22 +10,12 @@ class FirebaseService {
     if (this.initialized) return this.db;
 
     try {
-      // 更好的私钥处理方式
+      // 处理 Firebase 私钥
       let privateKey = process.env.FIREBASE_PRIVATE_KEY;
       if (privateKey) {
-        // 处理环境变量中的换行符
+        // 处理环境变量中的 \n 转义字符
         privateKey = privateKey.replace(/\\n/g, '\n');
-        
-        // 如果私钥不包含 PEM 标识符，添加它们
-        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-          // 清理私钥内容（移除可能的空格和换行）
-          const cleanKey = privateKey.replace(/\s+/g, '');
-          // 每64个字符添加一个换行符（PEM标准）
-          const formattedKey = cleanKey.match(/.{1,64}/g)?.join('\n') || cleanKey;
-          privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----`;
-        }
-        
-        console.log('🔑 Private key format processed');
+        console.log('🔑 Private key loaded and formatted');
       }
 
       const serviceAccount = {

@@ -36,8 +36,8 @@ class SignerService {
         [userAddress, tokenAddress, amount, nonce, expireAt]
       );
 
-      // 生成签名 - 直接签名原始哈希，避免双重前缀问题
-      const signature = await this.signer.signHash(messageHash);
+      // 生成签名 - 使用signMessage添加以太坊消息前缀
+      const signature = await this.signer.signMessage(ethers.getBytes(messageHash));
       
       console.log('📝 Generated signature for:', {
         userAddress,
@@ -76,8 +76,8 @@ class SignerService {
         [userAddress, tokenAddress, amount, nonce]
       );
 
-      // 恢复签名者地址 - 从原始哈希验证
-      const recoveredAddress = ethers.recoverAddress(messageHash, signature);
+      // 恢复签名者地址 - 使用verifyMessage验证
+      const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
       
       // 验证签名者是否是预期的地址
       const isValid = recoveredAddress.toLowerCase() === this.signer.address.toLowerCase();

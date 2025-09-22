@@ -5,6 +5,8 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagm
 import { parseEther, formatEther } from 'viem';
 import { useWalletInfo } from '../store/wallet';
 import { CONTRACTS, API_CONFIG } from '../lib/contracts';
+import { createPublicClient, http } from 'viem';
+import { sepolia } from 'viem/chains';
 
 interface SignatureData {
   signature: string;
@@ -15,6 +17,7 @@ interface SignatureData {
   amount: string;
   nonce: string;
   timestamp: number;
+  expireAt?: number;
 }
 
 const TOKEN_OPTIONS = [
@@ -41,6 +44,33 @@ export function TokenAirdropComponent() {
     hash,
   });
 
+  // 创建公共客户端用于查询交易状态
+  const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http('https://sepolia.gateway.tenderly.co')
+  });
+
+  // 手动查询交易状态
+  const checkTransactionStatus = async (txHash: string) => {
+    try {
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: txHash as `0x${string}`
+      });
+      
+      if (receipt.status === 'success') {
+        setStep('success');
+        return true;
+      } else if (receipt.status === 'reverted') {
+        alert('交易已确认但执行失败，请检查交易详情');
+        return false;
+      }
+    } catch (error) {
+      console.error('查询交易状态失败:', error);
+      // 如果查询失败，可能是交易还在pending，继续等待
+      return null;
+    }
+  };
+
   // 生成签名
   const generateSignature = async () => {
     if (!address || !selectedToken || !amount) return;
@@ -55,8 +85,8 @@ export function TokenAirdropComponent() {
         ? amountInWei 
         : BigInt(amount) * BigInt(10 ** decimals);
 
-      // 生成随机 nonce
-      const nonce = Math.floor(Math.random() * 1000000000);
+      // 计算过期时间（当前时间 + 5分钟）
+      const expireAt = Math.floor(Date.now() / 1000) + 300;
 
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GENERATE_SIGNATURE}`, {
         method: 'POST',
@@ -67,7 +97,7 @@ export function TokenAirdropComponent() {
           userAddress: address,
           tokenAddress: selectedToken.address,
           amount: adjustedAmount.toString(),
-          nonce: nonce,
+          expireAt: expireAt.toString(),
         }),
       });
 
@@ -75,10 +105,13 @@ export function TokenAirdropComponent() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      
-      if (data.signature) {
-        setSignatureData(data);
+      const data = await response.json();   
+      console.log(data,'dataa')
+      if (data.data.signature) {
+        setSignatureData({
+          ...data.data,
+          expireAt: expireAt
+        });
         setStep('signed');
       } else {
         throw new Error('签名生成失败');
@@ -91,16 +124,13 @@ export function TokenAirdropComponent() {
     }
   };
 
-  const claimTokens = async () => {
+  const claimTokens = () => {
     if (!signatureData || !address) return;
 
     setStep('claiming');
     
     try {
-      // 计算过期时间（当前时间 + 5分钟）
-      const expireAt = Math.floor(Date.now() / 1000) + 300; // 5分钟后过期
-
-      await writeContract({
+      writeContract({
         address: CONTRACTS.TOKEN_AIRDROP.address,
         abi: CONTRACTS.TOKEN_AIRDROP.abi,
         functionName: 'claimTokens',
@@ -108,7 +138,7 @@ export function TokenAirdropComponent() {
           signatureData.tokenAddress as `0x${string}`,
           BigInt(signatureData.amount),
           BigInt(signatureData.nonce),
-          BigInt(expireAt),
+          BigInt(signatureData.expireAt || 0),
           signatureData.signature as `0x${string}`,
         ],
       });
@@ -236,13 +266,32 @@ export function TokenAirdropComponent() {
       {step === 'claiming' && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             {isConfirming ? '等待交易确认...' : '正在提交交易...'}
           </p>
           {hash && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              交易哈希: {hash.slice(0, 10)}...{hash.slice(-8)}
-            </p>
+            <div className="space-y-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                交易哈希: {hash.slice(0, 10)}...{hash.slice(-8)}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                如果等待时间过长，可以手动检查交易状态：
+              </p>
+              <div className="flex space-x-3 justify-center">
+                <button
+                  onClick={() => checkTransactionStatus(hash)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+                >
+                  🔍 检查交易状态
+                </button>
+                <button
+                  onClick={() => setStep('success')}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+                >
+                  ✅ 交易已成功
+                </button>
+              </div>
+            </div>
           )}
         </div>
       )}

@@ -3,14 +3,61 @@ export const CONTRACTS = {
   TOKEN_AIRDROP: {
     address: process.env.NEXT_PUBLIC_TOKEN_AIRDROP_CONTRACT as `0x${string}` || '0x53850d0eb69feB0F2616e2A89AC9eFBE4A441569',
     abi: [
-      "function claimTokens(address token, uint256 amount, uint256 nonce, uint256 expireAt, bytes signature) external",
-      "function getUserNonce(address user) external view returns (uint256)",
-      "function getUserClaimed(address user, address token) external view returns (uint256)",
-      "function nonceUsed(address user, uint256 nonce) external view returns (bool)",
-      "function signer() external view returns (address)",
-      "function owner() external view returns (address)",
-      "event TokensClaimed(address indexed user, address indexed token, uint256 amount, uint256 nonce)"
-    ]
+      {
+        "name": "claimTokens",
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "inputs": [
+          {"name": "token", "type": "address"},
+          {"name": "amount", "type": "uint256"},
+          {"name": "nonce", "type": "uint256"},
+          {"name": "expireAt", "type": "uint256"},
+          {"name": "signature", "type": "bytes"}
+        ],
+        "outputs": []
+      },
+      {
+        "name": "getUserNonce",
+        "type": "function", 
+        "stateMutability": "view",
+        "inputs": [{"name": "user", "type": "address"}],
+        "outputs": [{"name": "", "type": "uint256"}]
+      },
+      {
+        "name": "getUserClaimed",
+        "type": "function",
+        "stateMutability": "view", 
+        "inputs": [
+          {"name": "user", "type": "address"},
+          {"name": "token", "type": "address"}
+        ],
+        "outputs": [{"name": "", "type": "uint256"}]
+      },
+      {
+        "name": "nonceUsed",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [
+          {"name": "user", "type": "address"},
+          {"name": "nonce", "type": "uint256"}
+        ],
+        "outputs": [{"name": "", "type": "bool"}]
+      },
+      {
+        "name": "signer",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}]
+      },
+      {
+        "name": "owner",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address"}]
+      }
+    ] as const
   },
   
   // MockToken 合约配置
@@ -89,7 +136,7 @@ export const SEPOLIA_CHAIN = {
 
 // API 配置
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://learning-hir12yip3-xiaolis-projects-1babd2b2.vercel.app',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://signer-node-di7tf9o2i-xiaolis-projects-1babd2b2.vercel.app',
   ENDPOINTS: {
     HEALTH: '/health',
     GENERATE_SIGNATURE: '/api/signatures/generate',

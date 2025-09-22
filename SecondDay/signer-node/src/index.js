@@ -39,6 +39,38 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
+// 签名验证测试端点
+app.post('/api/test-verify', async (req, res) => {
+  try {
+    const { userAddress, tokenAddress, amount, nonce, expireAt, signature } = req.body;
+    const signerService = require('./services/signer');
+    
+    // 使用与合约完全相同的方式构造消息哈希
+    const { ethers } = require('ethers');
+    const messageHash = ethers.solidityPackedKeccak256(
+      ['address', 'address', 'uint256', 'uint256', 'uint256'],
+      [userAddress, tokenAddress, amount, nonce, expireAt]
+    );
+    
+    // 完全模拟合约的验证流程
+    const ethSignedMessageHash = ethers.hashMessage(ethers.getBytes(messageHash));
+    const recoveredAddress = ethers.recoverAddress(ethSignedMessageHash, signature);
+    const expectedAddress = signerService.getSignerAddress();
+    
+    res.json({
+      messageHash,
+      ethSignedMessageHash,
+      signature,
+      recoveredAddress,
+      expectedAddress,
+      isValid: recoveredAddress.toLowerCase() === expectedAddress.toLowerCase(),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 环境变量测试端点
 app.get('/api/test-env', (req, res) => {
   res.json({

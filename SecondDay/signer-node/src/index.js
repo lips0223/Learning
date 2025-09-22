@@ -55,6 +55,33 @@ app.get('/api/test-env', (req, res) => {
   });
 });
 
+// Firebase 测试端点
+app.get('/api/test-firebase', async (req, res) => {
+  try {
+    const { initializeFirebase } = require('./services/firebase');
+    const result = await initializeFirebase();
+    
+    res.json({
+      timestamp: new Date().toISOString(),
+      firebase_status: 'initialized',
+      config_check: {
+        hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
+        hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+        hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+        privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0
+      },
+      result
+    });
+  } catch (error) {
+    res.status(500).json({
+      timestamp: new Date().toISOString(),
+      firebase_status: 'error',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 // 404 处理
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

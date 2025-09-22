@@ -16,6 +16,11 @@ class FirebaseService {
         // 处理环境变量中的 \n 转义字符
         privateKey = privateKey.replace(/\\n/g, '\n');
         console.log('🔑 Private key loaded and formatted');
+        console.log('🔍 Private key starts with:', privateKey.substring(0, 50));
+        console.log('🔍 Private key ends with:', privateKey.substring(privateKey.length - 50));
+        console.log('🔍 Private key length:', privateKey.length);
+      } else {
+        console.log('❌ FIREBASE_PRIVATE_KEY not found in environment variables');
       }
 
       const serviceAccount = {

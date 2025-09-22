@@ -39,6 +39,22 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
+// 环境变量测试端点
+app.get('/api/test-env', (req, res) => {
+  res.json({
+    timestamp: new Date().toISOString(),
+    env_check: {
+      hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+      hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+      privateKeyFirst30: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) || 'NOT_FOUND'
+    }
+  });
+});
+
 // 404 处理
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });

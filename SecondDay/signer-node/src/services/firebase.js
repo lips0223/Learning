@@ -32,20 +32,6 @@ class FirebaseService {
         console.log('❌ FIREBASE_PRIVATE_KEY not found in environment variables');
       }
 
-      const serviceAccount = {
-        type: "service_account",
-        project_id: process.env.FIREBASE_PROJECT_ID,
-        private_key_id: "37d9e726d982aa228057844800e268cce06024a6",
-        private_key: privateKey,
-        client_email: process.env.FIREBASE_CLIENT_EMAIL,
-        client_id: "114401495163225626947",
-        auth_uri: "https://accounts.google.com/o/oauth2/auth",
-        token_uri: "https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-        client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.FIREBASE_CLIENT_EMAIL}`,
-        universe_domain: "googleapis.com"
-      };
-
       // 验证必要的环境变量
       if (!process.env.FIREBASE_PROJECT_ID) {
         throw new Error('FIREBASE_PROJECT_ID environment variable is required');
@@ -59,9 +45,13 @@ class FirebaseService {
 
       console.log('🔑 Firebase config validation passed');
 
+      // 使用更简单的初始化方式
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: process.env.FIREBASE_PROJECT_ID
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey
+        })
       });
 
       this.db = admin.firestore();

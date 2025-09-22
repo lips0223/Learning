@@ -10,11 +10,22 @@ class FirebaseService {
     if (this.initialized) return this.db;
 
     try {
+      // 更好的私钥处理方式
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      if (privateKey) {
+        // 处理环境变量中的换行符
+        privateKey = privateKey.replace(/\\n/g, '\n');
+        // 确保私钥格式正确
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+          privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+        }
+      }
+
       const serviceAccount = {
         type: "service_account",
         project_id: process.env.FIREBASE_PROJECT_ID,
         private_key_id: "37d9e726d982aa228057844800e268cce06024a6",
-        private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        private_key: privateKey,
         client_email: process.env.FIREBASE_CLIENT_EMAIL,
         client_id: "114401495163225626947",
         auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -23,6 +34,19 @@ class FirebaseService {
         client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.FIREBASE_CLIENT_EMAIL}`,
         universe_domain: "googleapis.com"
       };
+
+      // 验证必要的环境变量
+      if (!process.env.FIREBASE_PROJECT_ID) {
+        throw new Error('FIREBASE_PROJECT_ID environment variable is required');
+      }
+      if (!process.env.FIREBASE_PRIVATE_KEY) {
+        throw new Error('FIREBASE_PRIVATE_KEY environment variable is required');
+      }
+      if (!process.env.FIREBASE_CLIENT_EMAIL) {
+        throw new Error('FIREBASE_CLIENT_EMAIL environment variable is required');
+      }
+
+      console.log('🔑 Firebase config validation passed');
 
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),

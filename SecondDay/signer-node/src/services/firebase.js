@@ -15,10 +15,17 @@ class FirebaseService {
       if (privateKey) {
         // 处理环境变量中的换行符
         privateKey = privateKey.replace(/\\n/g, '\n');
-        // 确保私钥格式正确
+        
+        // 如果私钥不包含 PEM 标识符，添加它们
         if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-          privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+          // 清理私钥内容（移除可能的空格和换行）
+          const cleanKey = privateKey.replace(/\s+/g, '');
+          // 每64个字符添加一个换行符（PEM标准）
+          const formattedKey = cleanKey.match(/.{1,64}/g)?.join('\n') || cleanKey;
+          privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedKey}\n-----END PRIVATE KEY-----`;
         }
+        
+        console.log('🔑 Private key format processed');
       }
 
       const serviceAccount = {

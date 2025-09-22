@@ -13,32 +13,21 @@ class FirebaseService {
       // 处理 Firebase 私钥
       let privateKey = process.env.FIREBASE_PRIVATE_KEY;
       if (privateKey) {
-        // 调试：原始私钥信息
         console.log('🔍 Raw private key length:', privateKey.length);
-        console.log('🔍 Raw private key first 100 chars:', privateKey.substring(0, 100));
-        console.log('🔍 Contains \\n sequences:', privateKey.includes('\\n'));
-        console.log('🔍 Contains actual newlines:', privateKey.includes('\n'));
+        console.log('🔍 Raw private key first 50 chars:', privateKey.substring(0, 50));
+        console.log('🔍 Contains literal \\n:', privateKey.includes('\\n'));
         
-        // 处理环境变量中的 \n 转义字符（如果存在）
+        // 只在包含字面量 \n 时才进行替换
         if (privateKey.includes('\\n')) {
           privateKey = privateKey.replace(/\\n/g, '\n');
-          console.log('✅ Converted \\n to actual newlines');
+          console.log('✅ Converted literal \\n to newlines');
         } else {
-          console.log('✅ Private key already contains actual newlines');
+          console.log('✅ Private key already has proper formatting');
         }
         
-        // 确保私钥格式正确
-        if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-          console.log('❌ Private key does not start with BEGIN marker');
-        }
-        if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
-          console.log('❌ Private key does not end with END marker');
-        }
-        
-        console.log('🔑 Final private key loaded and formatted');
-        console.log('🔍 Final private key starts with:', privateKey.substring(0, 50));
-        console.log('🔍 Final private key ends with:', privateKey.substring(privateKey.length - 50));
-        console.log('🔍 Final private key length:', privateKey.length);
+        console.log('� Final private key length:', privateKey.length);
+        console.log('🔍 Starts with BEGIN:', privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
+        console.log('🔍 Ends with END:', privateKey.endsWith('-----END PRIVATE KEY-----'));
       } else {
         console.log('❌ FIREBASE_PRIVATE_KEY not found in environment variables');
       }

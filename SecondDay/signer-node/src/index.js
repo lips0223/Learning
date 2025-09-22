@@ -35,50 +35,8 @@ app.get('/health', (req, res) => {
 app.use('/api/signatures', require('./routes/signatures'));
 
 // 临时 API 端点用于测试
-// Test endpoint
 app.get('/api/test', (req, res) => {
-  // 打印环境变量信息
-  console.log('=== Environment Variables Debug ===');
-  console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
-  console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
-  console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
-  console.log('FIREBASE_PRIVATE_KEY length:', process.env.FIREBASE_PRIVATE_KEY?.length || 0);
-  console.log('FIREBASE_PRIVATE_KEY first 100 chars:', process.env.FIREBASE_PRIVATE_KEY?.substring(0, 100));
-  console.log('FIREBASE_PRIVATE_KEY last 100 chars:', process.env.FIREBASE_PRIVATE_KEY?.substring(-100));
-  console.log('===================================');
-  
-  res.json({ 
-    message: 'Server is running - Debug version with env vars - v2',
-    timestamp: new Date().toISOString(),
-    env: {
-      hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKeyStart: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 50),
-      privateKeyEnd: process.env.FIREBASE_PRIVATE_KEY?.substring(-50)
-    }
-  });
-});
-
-// 调试端点 - 检查环境变量状态（不暴露具体内容）
-app.get('/api/debug/env-status', (req, res) => {
-  try {
-    const envStatus = {
-      hasFirebaseProjectId: !!process.env.FIREBASE_PROJECT_ID,
-      hasFirebasePrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-      hasFirebaseClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-      hasSignerPrivateKey: !!process.env.SIGNER_PRIVATE_KEY,
-      firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'NOT_SET',
-      firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'NOT_SET',
-      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
-      privateKeyStartsWith: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) || 'NOT_SET',
-      timestamp: new Date().toISOString()
-    };
-    res.json(envStatus);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
 });
 
 // 404 处理

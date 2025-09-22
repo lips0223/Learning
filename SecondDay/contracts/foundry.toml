@@ -1,0 +1,21 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = false
+
+# 依赖重映射
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "forge-std/=lib/forge-std/src/"
+]
+
+# 测试网配置
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+
+# 验证配置
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }

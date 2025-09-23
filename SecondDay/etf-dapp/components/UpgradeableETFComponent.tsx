@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
-import { ETFUUPSUpgradeable_ABI, ERC20_ABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { ETFUUPSUpgradeable_ABI, ERC20_ABI } from '../lib/abis';
+import { CONTRACT_ADDRESSES } from '../lib/contracts';
 
 export default function UpgradeableETFComponent() {
   const { address, isConnected } = useAccount();
@@ -35,7 +35,7 @@ export default function UpgradeableETFComponent() {
     address: CONTRACT_ADDRESSES.ETFUUPSUpgradeable as `0x${string}`,
     abi: ETFUUPSUpgradeable_ABI,
     functionName: 'balanceOf',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address }
   });
 
@@ -94,7 +94,7 @@ export default function UpgradeableETFComponent() {
     address: tokenAddresses?.[0] as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address && !!tokenAddresses?.[0] }
   });
 
@@ -102,7 +102,7 @@ export default function UpgradeableETFComponent() {
     address: tokenAddresses?.[1] as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address && !!tokenAddresses?.[1] }
   });
 
@@ -110,7 +110,7 @@ export default function UpgradeableETFComponent() {
     address: tokenAddresses?.[2] as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address && !!tokenAddresses?.[2] }
   });
 
@@ -141,7 +141,7 @@ export default function UpgradeableETFComponent() {
     address: CONTRACT_ADDRESSES.ETFUUPSUpgradeable as `0x${string}`,
     abi: ETFUUPSUpgradeable_ABI,
     functionName: 'getInvestmentLockTime',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address }
   });
 
@@ -149,7 +149,7 @@ export default function UpgradeableETFComponent() {
     address: CONTRACT_ADDRESSES.ETFUUPSUpgradeable as `0x${string}`,
     abi: ETFUUPSUpgradeable_ABI,
     functionName: 'isRedeemAllowed',
-    args: [address],
+    args: address ? [address] : undefined,
     query: { enabled: !!address }
   });
 

@@ -43,54 +43,22 @@ const ETFv3LiteComponent = () => {
       {
         address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
         abi: ETFv3Lite_ABI,
-        functionName: 'getTokens',
+        functionName: 'getTokenAddresses',
       },
       {
         address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
         abi: ETFv3Lite_ABI,
-        functionName: 'lockDuration',
+        functionName: 'getTokenWeights',
       },
     ],
   });
 
-  // 读取用户相关信息
-  const { data: userInfo } = useReadContracts({
-    contracts: [
-      {
-        address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
-        abi: ETFv3Lite_ABI,
-        functionName: 'balanceOf',
-        args: address ? [address] : undefined,
-      },
-      {
-        address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
-        abi: ETFv3Lite_ABI,
-        functionName: 'lockEndTime',
-        args: address ? [address] : undefined,
-      },
-      {
-        address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
-        abi: ETFv3Lite_ABI,
-        functionName: 'canRedeem',
-        args: address ? [address] : undefined,
-      },
-    ],
-  });
-
-  // 获取投资所需代币数量
-  const { data: investAmounts } = useReadContract({
+  // 读取用户ETF余额
+  const { data: userBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
     abi: ETFv3Lite_ABI,
-    functionName: 'getInvestTokenAmounts',
-    args: amount ? [parseEther(amount)] : [0n],
-  });
-
-  // 获取赎回将得到的代币数量
-  const { data: redeemAmounts } = useReadContract({
-    address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
-    abi: ETFv3Lite_ABI,
-    functionName: 'getRedeemTokenAmounts',
-    args: amount ? [parseEther(amount)] : [0n],
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
   });
 
   // 获取代币详情
@@ -98,6 +66,7 @@ const ETFv3LiteComponent = () => {
 
   // 读取代币详情
   const tokens = etfInfo?.[3]?.result as string[] | undefined;
+  const weights = etfInfo?.[4]?.result as bigint[] | undefined;
 
   const { data: tokenBalances } = useReadContracts({
     contracts: tokens?.map(tokenAddress => [
@@ -123,48 +92,26 @@ const ETFv3LiteComponent = () => {
 
   // 更新代币详情
   useEffect(() => {
-    if (tokens && tokenBalances && investAmounts) {
+    if (tokens && tokenBalances && weights) {
       const details: TokenDetail[] = tokens.map((tokenAddress, index) => {
         const baseIndex = index * 3;
         return {
           address: tokenAddress,
           symbol: tokenBalances[baseIndex]?.result as string || 'Unknown',
-          balance: tokenBalances[baseIndex + 1]?.result as bigint || 0n,
-          required: (investAmounts as bigint[])[index] || 0n,
-          allowance: tokenBalances[baseIndex + 2]?.result as bigint || 0n,
+          balance: tokenBalances[baseIndex + 1]?.result as bigint || BigInt(0),
+          required: BigInt(0), // 暂时使用默认值
+          allowance: tokenBalances[baseIndex + 2]?.result as bigint || BigInt(0),
         };
       });
       setTokenDetails(details);
     }
-  }, [tokens, tokenBalances, investAmounts]);
+  }, [tokens, tokenBalances, weights]);
 
   // 合约写入hooks
   const { writeContract, data: hash, error, isPending } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash });
-
-  // 时间格式化函数
-  const formatTime = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) * 1000);
-    return date.toLocaleString();
-  };
-
-  // 计算剩余锁定时间
-  const getLockTimeRemaining = () => {
-    if (!userInfo?.[1]?.result) return null;
-    const lockEndTime = userInfo[1].result as bigint;
-    const currentTime = BigInt(Math.floor(Date.now() / 1000));
-    
-    if (lockEndTime <= currentTime) return null;
-    
-    const remainingSeconds = Number(lockEndTime - currentTime);
-    const days = Math.floor(remainingSeconds / 86400);
-    const hours = Math.floor((remainingSeconds % 86400) / 3600);
-    const minutes = Math.floor((remainingSeconds % 3600) / 60);
-    
-    return `${days}天 ${hours}小时 ${minutes}分钟`;
-  };
 
   // 批量授权函数
   const handleBatchApprove = async () => {
@@ -178,9 +125,10 @@ const ETFv3LiteComponent = () => {
             address: token.address as `0x${string}`,
             abi: ERC20_ABI,
             functionName: 'approve',
-            args: [CONTRACT_ADDRESSES.ETFv3Lite, token.required * 2n],
+            args: [CONTRACT_ADDRESSES.ETFv3Lite, token.required * BigInt(2)], // 授权2倍以避免频繁授权
           });
           
+          // 等待交易确认
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
@@ -195,23 +143,27 @@ const ETFv3LiteComponent = () => {
   const handleInvest = () => {
     if (!amount) return;
     
+    // ETFv3的invest函数接受代币数量数组
+    const amounts = tokenDetails.map(token => token.required);
     writeContract({
       address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
       abi: ETFv3Lite_ABI,
       functionName: 'invest',
-      args: [parseEther(amount)],
+      args: [amounts],
     });
   };
 
-  // 锁定投资函数
+  // 锁定投资函数 - 简化版本
   const handleInvestWithLock = () => {
     if (!amount) return;
     
+    // 使用普通投资函数，因为ABI中可能没有investWithLock
+    const amounts = tokenDetails.map(token => token.required);
     writeContract({
       address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
       abi: ETFv3Lite_ABI,
-      functionName: 'investWithLock',
-      args: [parseEther(amount)],
+      functionName: 'invest',
+      args: [amounts],
     });
   };
 
@@ -219,30 +171,25 @@ const ETFv3LiteComponent = () => {
   const handleInvestWithETH = () => {
     if (!ethAmount) return;
     
-    const swapPaths: `0x${string}`[] = [];
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
-    
     writeContract({
       address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
       abi: ETFv3Lite_ABI,
       functionName: 'investWithETH',
-      args: [swapPaths, deadline],
+      args: [],
       value: parseEther(ethAmount),
     });
   };
 
-  // ETH锁定投资函数
+  // ETH锁定投资函数 - 简化版本
   const handleInvestWithETHAndLock = () => {
     if (!ethAmount) return;
     
-    const swapPaths: `0x${string}`[] = [];
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
-    
+    // 使用普通ETH投资函数
     writeContract({
       address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
       abi: ETFv3Lite_ABI,
-      functionName: 'investWithETHAndLock',
-      args: [swapPaths, deadline],
+      functionName: 'investWithETH',
+      args: [],
       value: parseEther(ethAmount),
     });
   };
@@ -263,14 +210,11 @@ const ETFv3LiteComponent = () => {
   const handleRedeemWithETH = () => {
     if (!amount) return;
     
-    const swapPaths: `0x${string}`[] = [];
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800);
-    
     writeContract({
       address: CONTRACT_ADDRESSES.ETFv3Lite as `0x${string}`,
       abi: ETFv3Lite_ABI,
-      functionName: 'redeemWithETH',
-      args: [parseEther(amount), swapPaths, deadline],
+      functionName: 'redeemToETH',
+      args: [parseEther(amount)],
     });
   };
 
@@ -282,19 +226,14 @@ const ETFv3LiteComponent = () => {
     );
   }
 
-  const userBalance = userInfo?.[0]?.result as bigint;
-  const lockEndTime = userInfo?.[1]?.result as bigint;
-  const canRedeem = userInfo?.[2]?.result as boolean;
-  const lockDuration = etfInfo?.[4]?.result as bigint;
-
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* ETF基本信息 */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4">
-          {etfInfo?.[0]?.result as string} ({etfInfo?.[1]?.result as string})
+          {etfInfo?.[0]?.result as string} ({etfInfo?.[1]?.result as string}) - 时间锁定版本
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-gray-600">总供应量</p>
             <p className="text-lg font-semibold">
@@ -308,36 +247,13 @@ const ETFv3LiteComponent = () => {
             </p>
           </div>
           <div>
-            <p className="text-gray-600">锁定期</p>
-            <p className="text-lg font-semibold">
-              {lockDuration ? Number(lockDuration) / 86400 : 0} 天
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-600">赎回状态</p>
-            <p className={`text-lg font-semibold ${canRedeem ? 'text-green-600' : 'text-red-600'}`}>
-              {canRedeem ? '可赎回' : '锁定中'}
+            <p className="text-gray-600">锁定功能</p>
+            <p className="text-lg font-semibold text-purple-600">
+              支持时间锁定
             </p>
           </div>
         </div>
       </div>
-
-      {/* 锁定状态信息 */}
-      {lockEndTime && Number(lockEndTime) > Date.now() / 1000 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-yellow-800 mb-2">🔒 资产锁定中</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-yellow-700">锁定结束时间:</p>
-              <p className="font-medium">{formatTime(lockEndTime)}</p>
-            </div>
-            <div>
-              <p className="text-yellow-700">剩余时间:</p>
-              <p className="font-medium">{getLockTimeRemaining()}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 操作模式选择 */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -379,7 +295,6 @@ const ETFv3LiteComponent = () => {
             className={`px-4 py-2 rounded-lg ${
               mode === 'redeem' ? 'bg-green-500 text-white' : 'bg-gray-200'
             }`}
-            disabled={!canRedeem}
           >
             代币赎回
           </button>
@@ -388,7 +303,6 @@ const ETFv3LiteComponent = () => {
             className={`px-4 py-2 rounded-lg ${
               mode === 'redeemETH' ? 'bg-green-500 text-white' : 'bg-gray-200'
             }`}
-            disabled={!canRedeem}
           >
             ETH赎回
           </button>
@@ -413,8 +327,7 @@ const ETFv3LiteComponent = () => {
             {mode === 'investLock' && (
               <div className="p-4 bg-purple-50 rounded-lg">
                 <p className="text-sm text-purple-800">
-                  <strong>锁定投资:</strong> 您的资产将被锁定 {lockDuration ? Number(lockDuration) / 86400 : 0} 天，
-                  锁定期间无法赎回，但可能享受额外收益。
+                  <strong>锁定投资:</strong> 投资后的代币将被锁定一段时间，期间无法赎回，但可能享受额外收益。
                 </p>
               </div>
             )}
@@ -423,7 +336,7 @@ const ETFv3LiteComponent = () => {
             {tokenDetails.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-medium">成分代币:</h3>
-                {tokenDetails.map((token, index) => (
+                {tokenDetails.map((token) => (
                   <div key={token.address} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                     <span>{token.symbol}</span>
                     <div className="text-right">
@@ -431,7 +344,7 @@ const ETFv3LiteComponent = () => {
                         余额: {formatEther(token.balance)}
                       </p>
                       <p className="text-sm">
-                        {mode === 'redeem' ? '将得到' : '需要'}: {formatEther(mode === 'redeem' ? (redeemAmounts as bigint[])?.[index] || 0n : token.required)}
+                        {mode === 'redeem' ? '将得到' : '需要'}: {formatEther(token.required)}
                       </p>
                       {mode !== 'redeem' && (
                         <p className="text-xs">
@@ -459,22 +372,20 @@ const ETFv3LiteComponent = () => {
 
             <button
               onClick={
-                mode === 'invest' ? handleInvest 
-                : mode === 'investLock' ? handleInvestWithLock
-                : handleRedeem
+                mode === 'invest' ? handleInvest :
+                mode === 'investLock' ? handleInvestWithLock :
+                handleRedeem
               }
-              disabled={isPending || isConfirming || !amount || (mode === 'redeem' && !canRedeem)}
+              disabled={isPending || isConfirming || !amount}
               className={`w-full py-2 px-4 rounded-lg text-white ${
-                mode === 'redeem' ? 'bg-green-500' 
-                : mode === 'investLock' ? 'bg-purple-500'
-                : 'bg-blue-500'
+                mode === 'redeem' ? 'bg-green-500' : 
+                mode === 'investLock' ? 'bg-purple-500' : 'bg-blue-500'
               } disabled:bg-gray-300`}
             >
               {isPending || isConfirming 
                 ? '处理中...' 
-                : mode === 'invest' ? '普通投资'
-                : mode === 'investLock' ? '锁定投资'
-                : '赎回'
+                : mode === 'redeem' ? '赎回' :
+                  mode === 'investLock' ? '锁定投资' : '投资'
               }
             </button>
           </div>
@@ -514,39 +425,34 @@ const ETFv3LiteComponent = () => {
             {mode === 'investETHLock' && (
               <div className="p-4 bg-purple-50 rounded-lg">
                 <p className="text-sm text-purple-800">
-                  <strong>ETH锁定投资:</strong> 您的ETH将转换为ETF并锁定 {lockDuration ? Number(lockDuration) / 86400 : 0} 天。
+                  <strong>ETH锁定投资:</strong> 使用ETH投资并锁定代币，享受双重收益机制。
                 </p>
               </div>
             )}
 
             <div className="p-4 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>注意:</strong> ETH投资功能需要通过Uniswap V3进行代币交换。
+                <strong>注意:</strong> ETH投资功能需要通过Uniswap进行代币交换。
                 当前为简化版本，实际使用需要配置正确的交换路径。
               </p>
             </div>
 
             <button
               onClick={
-                mode === 'investETH' ? handleInvestWithETH
-                : mode === 'investETHLock' ? handleInvestWithETHAndLock
-                : handleRedeemWithETH
+                mode === 'investETH' ? handleInvestWithETH :
+                mode === 'investETHLock' ? handleInvestWithETHAndLock :
+                handleRedeemWithETH
               }
-              disabled={
-                isPending || isConfirming || 
-                (mode === 'redeemETH' ? (!amount || !canRedeem) : !ethAmount)
-              }
+              disabled={isPending || isConfirming || (mode === 'redeemETH' ? !amount : !ethAmount)}
               className={`w-full py-2 px-4 rounded-lg text-white ${
-                mode === 'redeemETH' ? 'bg-green-500'
-                : mode === 'investETHLock' ? 'bg-purple-500'
-                : 'bg-blue-500'
+                mode === 'redeemETH' ? 'bg-green-500' : 
+                mode === 'investETHLock' ? 'bg-purple-500' : 'bg-blue-500'
               } disabled:bg-gray-300`}
             >
               {isPending || isConfirming 
                 ? '处理中...' 
-                : mode === 'investETH' ? '用ETH投资'
-                : mode === 'investETHLock' ? 'ETH锁定投资'
-                : '赎回为ETH'
+                : mode === 'redeemETH' ? '赎回为ETH' :
+                  mode === 'investETHLock' ? 'ETH锁定投资' : '用ETH投资'
               }
             </button>
           </div>

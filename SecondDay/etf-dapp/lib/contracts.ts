@@ -1,3 +1,22 @@
+// ETF合约地址配置
+export const CONTRACT_ADDRESSES = {
+  ETFv1: "0x37Ee135db8e41D3F9C15F97918C58651E8A564A6" as `0x${string}`,
+  ETFv2: "0xe75dDeb4d90F62b0D70CAFe2c8db9B968E29336c" as `0x${string}`,
+  ETFv3Lite: "0xF5cF61a03c562f254501C0693B67B31cAa79Df4C" as `0x${string}`,
+  ETFv4Lite: "0xa02A55F8c4DA1271C37D13C90A372747295B5a60" as `0x${string}`,
+  ETFProtocolToken: "0xF6dAeD439bb765d4886dfEF243DA9A2E8d549499" as `0x${string}`,
+  ETFUUPSUpgradeable: "0xEb8f4136578538758eAf2a382E9cB30D897dd958" as `0x${string}`,
+  ETFProxyFactory: "0x7DD6d4f5507DB3e448FC64d78C37F7A687F27405" as `0x${string}`,
+} as const;
+
+// 测试代币地址
+export const TOKEN_ADDRESSES = {
+  LINK: "0x779877A7B0D9E8603169DdbD7836e478b4624789" as `0x${string}`,
+  UNI: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984" as `0x${string}`,
+  ENS: "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844" as `0x${string}`,
+  WETH: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9" as `0x${string}`,
+} as const;
+
 export const CONTRACTS = {
   // TokenAirDrop 合约
   TOKEN_AIRDROP: {

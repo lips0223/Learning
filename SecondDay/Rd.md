@@ -12,3 +12,7 @@ contracts 是Foundry集成的合约
 
 **NEW TokenAirDrop需要验证:**
 - NEW TokenAirDrop: https://sepolia.etherscan.io/address/0x53850d0eb69feB0F2616e2A89AC9eFBE4A441569
+
+
+
+etf v1 : 0x37Ee135db8e41D3F9C15F97918C58651E8A564A6

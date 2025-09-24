@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@rainbow-me/rainbowkit'],
+  output: 'standalone',
+  trailingSlash: false,
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // 只为浏览器环境配置必要的 fallback

@@ -73,7 +73,7 @@ contract ETFv2 is IETFv2, ETFv1 {
         uint256 mintAmount,
         bytes[] memory swapPaths
     ) external payable {
-        address[] memory tokens = getTokens();
+        address[] memory tokens = getTokens(); //getTokens是ETFv1的函数 用于获取成分代币地址数组
         if (tokens.length != swapPaths.length) revert InvalidArrayLength();
         uint256[] memory tokenAmounts = getInvestTokenAmounts(mintAmount);
 
@@ -88,6 +88,7 @@ contract ETFv2 is IETFv2, ETFv1 {
             if (tokenAmounts[i] == 0) continue;
             
             // 验证交换路径的有效性
+            //_checkSwapPath是内部函数 用于验证Uniswap V3的交换路径是否合法
             if (!_checkSwapPath(tokens[i], weth, swapPaths[i]))
                 revert InvalidSwapPath(swapPaths[i]);
                 
@@ -136,6 +137,7 @@ contract ETFv2 is IETFv2, ETFv1 {
     ) external {
         address[] memory tokens = getTokens();
         if (tokens.length != swapPaths.length) revert InvalidArrayLength();
+        //getInvestTokenAmounts是ETFv1的函数 用于计算投资指定数量ETF所需的各成分代币数量
         uint256[] memory tokenAmounts = getInvestTokenAmounts(mintAmount);
 
         // 转入源代币
